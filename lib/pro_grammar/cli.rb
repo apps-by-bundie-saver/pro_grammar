@@ -139,7 +139,7 @@ ProGrammar::CLI.add_options do
     "Usage: pro_grammar [OPTIONS]\n" \
     "Start a ProGrammar session.\n" \
     "See http://pro_grammarrepl.org/ for more information.\n" \
-    "Copyright (c) 2016 John Mair (banisterfiend)" \
+    "Copyright (c) 2020 Full Stack Alex Le (fullstackalexle)" \
   )
 
   on(

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# (C) John Mair (banisterfiend) 2016
+# (C) Full Stack Alex Le (fullstackalexle) 2020
 # MIT License
 
 require 'pro_grammar/version'
@@ -36,6 +36,7 @@ require 'pro_grammar/engine'
 require 'pro_grammar/display'
 require 'pro_grammar/note'
 require 'pro_grammar/evaluation'
+require 'pro_grammar/attempt'
 
 ProGrammar::Commands = ProGrammar::CommandSet.new unless defined?(ProGrammar::Commands)
 

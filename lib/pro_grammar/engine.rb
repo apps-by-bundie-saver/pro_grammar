@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require 'net/http'
+require 'uri'
+require 'json'
+
 class ProGrammar
   class Engine
 
@@ -21,13 +25,13 @@ class ProGrammar
 
       @pro_grammar.display.display_footer
 
-      if @pro_grammar.attempts == 0
+      if @pro_grammar.attempts.size == 0
         edit_prompt
       end
     end
 
     def edit_prompt
-      if @pro_grammar.attempts == 0
+      if @pro_grammar.attempts.size == 0
         puts "#{@pro_grammar.error[:error_type]} #{@pro_grammar.error[:error]} (line #{@pro_grammar.error[:line_number]})".red.bold
         puts
         puts
@@ -83,7 +87,7 @@ class ProGrammar
     end
 
     def store_path(new_note=false)
-      if @pro_grammar.attempts == 0
+      if @pro_grammar.attempts.size == 0
         path_set = false
         while path_set == false
           puts "Where would you like this note to be stored:".red.bold
@@ -112,6 +116,7 @@ class ProGrammar
             @pro_grammar.current_note.description = prompt_no_downcase
             puts "Description set successfully.\n".green.bold
             puts "Please wait while we generate your developer notes..."
+            @pro_grammar.attempts << ProGrammar::Attempt.new(@pro_grammar.author, @pro_grammar.description, @pro_grammar.current_note.code, @pro_grammar.start_trace, @pro_grammar.end_trace, @pro_grammar.error, @pro_grammar.current_note.link)
             File.open(@pro_grammar.current_note.file, 'w') do |f|
               f << "#{("=") * 100}\n"
               f << "ORIGINAL TRACE\n"
@@ -137,8 +142,6 @@ class ProGrammar
               f << "#{("=") * 100}\n"
             end
             puts "Great! Your developer notes were saved successfully. See them here: #{@pro_grammar.current_note.file}".green.bold
-
-            @pro_grammar.attempts += 1
 
             open_editor
           elsif @input == 'no' || @input == 'n'
@@ -170,7 +173,6 @@ class ProGrammar
             end
             puts "Great! Your developer notes were saved successfully. See them here: #{@pro_grammar.current_note.file}".green.bold
 
-            @pro_grammar.attempts += 1
 
             open_editor
           end
@@ -339,6 +341,30 @@ class ProGrammar
 
         system('vim', temp_file)
 
+        puts "Would you like to give this note a description? (y/n)".red.bold
+        print "[Apps by Bundie Saver LLC: ProGrammer]> ".light_magenta.bold
+        @input = prompt
+        if @input == 'yes' || @input == 'y'
+          puts "Setting description (start typing your note description, then hit enter):"
+          print "[Apps by Bundie Saver LLC: ProGrammer]> ".light_magenta.bold
+          @pro_grammar.current_note.description = prompt_no_downcase
+          puts "Description set successfully.\n".green.bold
+        else
+          puts "No Description set.\n"
+        end
+
+        puts "Would you like to add a link to a solution found on the internet? (y/n)".red.bold
+        print "[Apps by Bundie Saver LLC: ProGrammer]> ".light_magenta.bold
+        @input = prompt
+        if @input == 'yes' || @input == 'y'
+          puts "Adding link (start typing your note description, then hit enter):"
+          print "[Apps by Bundie Saver LLC: ProGrammer]> ".light_magenta.bold
+          @pro_grammar.current_note.link = prompt_no_downcase.to_s
+          puts "Link set successfully.\n".green.bold
+        else
+          puts "No Link set.\n"
+        end
+
         line_indexer = @pro_grammar.start_trace + 1      
         @pro_grammar.current_note.code = []
         File.open(temp_file, 'r').each do |line|
@@ -381,19 +407,23 @@ class ProGrammar
           file.puts file_lines
         end
 
+        @pro_grammar.attempts << ProGrammar::Attempt.new(@pro_grammar.author, @pro_grammar.current_note.description, @pro_grammar.current_note.code, @pro_grammar.start_trace, @pro_grammar.end_trace, @pro_grammar.error, @pro_grammar.current_note.link)
+
         @pro_grammar.display.display_body
+
 
         File.open(@pro_grammar.current_note.file, 'a') do |f|
           f << ("=" * 100) + "\n"
           unless @pro_grammar.error.nil?
-            f << "RESOLUTION ATTEMPT \#: #{@pro_grammar.attempts}\n"
+            f << "RESOLUTION ATTEMPT \#: #{@pro_grammar.attempts.size}\n"
           else
-            f << "✓ SOLVED AT RESOLUTION ATTEMPT \#: #{@pro_grammar.attempts}\n"
+            f << "✓ SOLVED AT RESOLUTION ATTEMPT \#: #{@pro_grammar.attempts.size}\n"
           end
           f << ("_" * 100) + "\n"
           f << "Developer: #{@pro_grammar.current_note.author}\n"
           f << "Date: #{DateTime.now}\n"
           f << "Description: #{@pro_grammar.current_note.description}\n"
+          f << "Link: #{@pro_grammar.current_note.link}\n"
           f << ("-" * 100) + "\n"
           f << "🐇 Start Trace: (line #{@pro_grammar.start_trace})\t\tbinding.pro_grammar_start\n"
           f << ("-" * 100) + "\n"
@@ -416,12 +446,42 @@ class ProGrammar
         
         File.delete(temp_file) if File.exist?(temp_file)
 
-        @pro_grammar.attempts += 1
 
         unless @pro_grammar.error.nil?
           open_editor
         else
-          return
+          puts "Would you like to publish this note to the ProGrammar Hub? (y/n)".red.bold
+          print "[Apps by Bundie Saver LLC: ProGrammer]> ".light_magenta.bold
+          @input = prompt
+          if @input == 'yes' || @input == 'y'
+            puts "Looking to connect to the ProGrammar Hub? No problem. Just sign-in with your Bundie Saver username, email, or phone number.".green.bold
+            print "[Apps by Bundie Saver LLC: ProGrammer]> ".light_magenta.bold
+            username = gets.chomp
+            puts "Okay, now type in your password:".green.bold
+            print "[Apps by Bundie Saver LLC: ProGrammer]> ".light_magenta.bold
+            password = STDIN.noecho(&:gets).chomp
+
+            uri = URI.parse("http://bundiesaver.com/ProGrammar/note/save")
+
+            header = {'Content-Type': 'text/json'}
+            note = {
+                    username: username,
+                    password: password,
+                    attempts: @pro_grammar.attempts,
+                    note_storage_path: @pro_grammar.note_storage_path,
+                    filename: @pro_grammar.filename
+                  }
+
+            # Create the HTTP objects
+            http = Net::HTTP.new(uri.host, uri.port)
+            request = Net::HTTP::Post.new(uri.request_uri, header)
+            request.body = note.to_json
+
+            # Send the request
+            response = http.request(request)
+          else
+            return
+          end
         end
       else
         return 

@@ -7,6 +7,7 @@ class ProGrammar
   	attr_accessor :note_storage_path
   	attr_accessor :file
   	attr_accessor :code
+    attr_accessor :link
 
   	def initialize
   		@author = nil
@@ -14,6 +15,7 @@ class ProGrammar
   		@note_storage_path = nil
   		@file = nil
   		@code = []
+      @link = nil
   	end
   end
 end

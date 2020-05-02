@@ -112,7 +112,7 @@ class ProGrammar
     @filename = nil
     @start_trace = nil
     @end_trace = nil
-    @attempts = 0
+    @attempts = []
     @error = nil
     @note_storage_path = nil
     @current_note = ProGrammar::Note.new

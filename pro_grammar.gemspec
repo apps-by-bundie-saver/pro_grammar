@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{The sensible programmers' tool for easy trace-logging, resolution logger, and development note-taking (brought to you by Bundie Saver LLC)}
   spec.description   = %q{ProGrammar is the development logging tool that allows developers to keep track and log their development steps as they debug errors. As a developer, you will, no doubt, encounter countless errors and attempts at resolving those errors; it becomes a multi-step process in troubleshooting those errors, and ProGrammar helps you log all of your steps into a text generated document which is succinct and easy-to-read as developer notes.}
-  spec.homepage      = "https://github.com/apps-by-bundie-saver/pro_grammar"
+  spec.homepage      = "https://bundiesaver.com/app/documentation#pro_grammar"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
